@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String         @id @default(uuid())
+  telegram_user_id String         @unique
+  username         String?
+  first_name       String
+  last_name        String?
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+  
+  subscriptions    Subscription[]
+  payments         Payment[]
+  user_state       UserState?
+  invite_links     InviteLink[]
+  message_logs     MessageLog[]
+
+  @@map("users")
+}
+
+model Subscription {
+  id          String   @id @default(uuid())
+  user_id     String
+  status      String   // active, expired, cancelled
+  plan_id     String
+  started_at  DateTime @default(now())
+  expires_at  DateTime
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  
+  user         User          @relation(fields: [user_id], references: [id])
+  payments     Payment[]
+  invite_links InviteLink[]
+
+  @@index([user_id])
+  @@index([status])
+  @@index([expires_at])
+  @@map("subscriptions")
+}
+
+model Payment {
+  id                  String    @id @default(uuid())
+  user_id             String
+  subscription_id     String?
+  plan_id             String
+  amount              Int       // centavos
+  status              String    // pending, paid, failed, cancelled
+  provider            String    @default("syncpay")
+  provider_charge_id  String    @unique
+  pix_copy_paste      String?
+  pix_qr_code         String?
+  paid_at             DateTime?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+  
+  user         User          @relation(fields: [user_id], references: [id])
+  subscription Subscription? @relation(fields: [subscription_id], references: [id])
+
+  @@index([user_id])
+  @@index([status])
+  @@index([provider_charge_id])
+  @@map("payments")
+}
+
+model UserState {
+  id                  String   @id @default(uuid())
+  user_id             String   @unique
+  start_seen          Boolean  @default(false)
+  current_funnel      String?
+  current_step        Int      @default(0)
+  last_interaction_at DateTime @default(now())
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+  
+  user User @relation(fields: [user_id], references: [id])
+
+  @@map("user_states")
+}
+
+model InviteLink {
+  id              String   @id @default(uuid())
+  user_id         String
+  subscription_id String
+  invite_link     String
+  used            Boolean  @default(false)
+  expires_at      DateTime
+  created_at      DateTime @default(now())
+  
+  user         User         @relation(fields: [user_id], references: [id])
+  subscription Subscription @relation(fields: [subscription_id], references: [id])
+
+  @@index([user_id])
+  @@index([subscription_id])
+  @@map("invite_links")
+}
+
+model MessageLog {
+  id           String    @id @default(uuid())
+  user_id      String
+  message_type String
+  funnel       String?
+  step         Int?
+  sent_at      DateTime  @default(now())
+  
+  user User @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+  @@index([sent_at])
+  @@map("message_logs")
+}

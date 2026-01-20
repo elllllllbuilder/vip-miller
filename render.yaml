@@ -1,0 +1,75 @@
+services:
+  # API
+  - type: web
+    name: vip-miller-api
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: apps/api
+    buildCommand: npm install -g pnpm && pnpm install && pnpm prisma generate && pnpm build
+    startCommand: pnpm prisma migrate deploy && pnpm start
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://vip_postgres_user:CI6Ljk1nTWPVuDsSkpMOfEqLf2bnXkGL@dpg-d5nq52coud1c73a4r15g-a/vip_postgres
+      - key: REDIS_URL
+        value: redis://red-d5nq5nmmcj7s73crud1g:6379
+      - key: NODE_ENV
+        value: production
+      - key: API_PORT
+        value: 3000
+      - key: TELEGRAM_BOT_TOKEN
+        value: 8567672373:AAHnR234cwYg9qcpkDHXoKeP1TZj80N1AXM
+      - key: TELEGRAM_VIP_CHAT_ID
+        value: -5158395680
+      - key: TELEGRAM_API_URL
+        value: https://api.telegram.org
+      - key: SYNCPAY_API_KEY
+        value: f8c56a5d-e365-42d2-aca3-394d2b8348b3
+      - key: SYNCPAY_WEBHOOK_SECRET
+        value: 05466549-1474-46e9-92c0-36aa929f28a9
+      - key: SYNCPAY_API_URL
+        value: https://api.syncpayments.com.br/
+      - key: PLAN_MONTHLY_ID
+        value: monthly_vip
+      - key: PLAN_MONTHLY_PRICE
+        value: 2990
+
+  # Bot
+  - type: worker
+    name: vip-miller-bot
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: apps/bot
+    buildCommand: npm install -g pnpm && pnpm install && pnpm build
+    startCommand: pnpm start
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        value: 8567672373:AAHnR234cwYg9qcpkDHXoKeP1TZj80N1AXM
+      - key: TELEGRAM_VIP_CHAT_ID
+        value: -5158395680
+      - key: API_URL
+        value: https://vip-miller-api.onrender.com
+      - key: NODE_ENV
+        value: production
+
+  # Worker
+  - type: worker
+    name: vip-miller-worker
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: apps/worker
+    buildCommand: npm install -g pnpm && pnpm install && pnpm build
+    startCommand: pnpm start
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://vip_postgres_user:CI6Ljk1nTWPVuDsSkpMOfEqLf2bnXkGL@dpg-d5nq52coud1c73a4r15g-a/vip_postgres
+      - key: REDIS_URL
+        value: redis://red-d5nq5nmmcj7s73crud1g:6379
+      - key: API_URL
+        value: https://vip-miller-api.onrender.com
+      - key: TELEGRAM_BOT_TOKEN
+        value: 8567672373:AAHnR234cwYg9qcpkDHXoKeP1TZj80N1AXM
+      - key: NODE_ENV
+        value: production

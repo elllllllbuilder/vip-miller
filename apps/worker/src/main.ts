@@ -1,0 +1,74 @@
+import { renewalQueue, createRenewalWorker } from './queues/queues';
+import { processRenewalJob } from './jobs/renewals.job';
+import { processExpirationsJob } from './jobs/expirations.job';
+
+async function start() {
+  console.log('🔧 Worker starting...');
+
+  // Criar worker para processar jobs
+  const worker = createRenewalWorker(async (job) => {
+    if (job.name === 'renewal-reminder') {
+      return processRenewalJob(job);
+    } else if (job.name === 'process-expirations') {
+      return processExpirationsJob(job);
+    }
+  });
+
+  worker.on('completed', (job) => {
+    console.log(`✅ Job ${job.id} completed`);
+  });
+
+  worker.on('failed', (job, err) => {
+    console.error(`❌ Job ${job?.id} failed:`, err);
+  });
+
+  // Agendar jobs recorrentes (1x por dia às 10h)
+  await renewalQueue.add(
+    'renewal-reminder',
+    { daysAhead: 7 },
+    {
+      repeat: {
+        pattern: '0 10 * * *', // Cron: 10h todos os dias
+      },
+    }
+  );
+
+  await renewalQueue.add(
+    'renewal-reminder',
+    { daysAhead: 3 },
+    {
+      repeat: {
+        pattern: '0 10 * * *',
+      },
+    }
+  );
+
+  await renewalQueue.add(
+    'renewal-reminder',
+    { daysAhead: 1 },
+    {
+      repeat: {
+        pattern: '0 10 * * *',
+      },
+    }
+  );
+
+  await renewalQueue.add(
+    'process-expirations',
+    {},
+    {
+      repeat: {
+        pattern: '0 11 * * *', // 11h todos os dias
+      },
+    }
+  );
+
+  console.log('✅ Worker is running and jobs are scheduled!');
+  console.log('📅 Renewal reminders: Daily at 10:00 AM (D-7, D-3, D-1)');
+  console.log('📅 Process expirations: Daily at 11:00 AM');
+}
+
+start().catch((error) => {
+  console.error('Failed to start worker:', error);
+  process.exit(1);
+});
