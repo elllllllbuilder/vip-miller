@@ -7,6 +7,86 @@ export async function webhooksRoutes(
   webhooksService: WebhooksService,
   paymentsService?: any
 ) {
+  // Endpoint de debug para testar sem Telegram
+  fastify.post('/test/debug-payment/:paymentId', async (request: any, reply: any) => {
+    const { paymentId } = request.params;
+    
+    try {
+      if (!paymentsService) {
+        return reply.status(500).send({ error: 'PaymentsService not available' });
+      }
+
+      // 1. Buscar o payment
+      const payments = await paymentsService.listPayments(100, 0);
+      const targetPayment = payments.find((p: any) => p.id === paymentId);
+      
+      if (!targetPayment) {
+        return reply.status(404).send({ error: 'Payment not found' });
+      }
+
+      logger.info({ targetPayment }, 'DEBUG: Payment found');
+
+      // 2. Verificar se já foi processado (idempotência)
+      const { isProcessed } = require('../../shared/utils/idempotency');
+      const alreadyProcessed = isProcessed(targetPayment.provider_charge_id);
+      
+      logger.info({ provider_charge_id: targetPayment.provider_charge_id, alreadyProcessed }, 'DEBUG: Idempotency check');
+
+      if (alreadyProcessed) {
+        return reply.send({ 
+          success: true, 
+          message: 'Already processed (idempotency)', 
+          payment: targetPayment 
+        });
+      }
+
+      // 3. Simular webhook SEM processar Telegram
+      const mockPayload = {
+        event: 'cash_in.received',
+        data: {
+          identifier: targetPayment.provider_charge_id,
+          amount: targetPayment.amount / 100,
+          status: 'paid',
+          payment_method: 'pix',
+          metadata: {
+            user_id: targetPayment.user_id,
+            plan_id: targetPayment.plan_id
+          }
+        }
+      };
+
+      logger.info({ mockPayload }, 'DEBUG: Mock payload created');
+
+      // 4. Processar apenas até a subscription (sem Telegram)
+      const subscriptionsService = webhooksService.subscriptionsService;
+      const subscription = await subscriptionsService.createOrRenewSubscription(
+        targetPayment.user_id,
+        targetPayment.plan_id
+      );
+
+      logger.info({ subscription }, 'DEBUG: Subscription created');
+
+      // 5. Atualizar payment
+      await paymentsService.confirmPayment(targetPayment.provider_charge_id, subscription.id);
+
+      logger.info('DEBUG: Payment confirmed');
+
+      return reply.send({ 
+        success: true, 
+        message: 'Debug processed successfully (no Telegram)', 
+        payment: targetPayment,
+        subscription: subscription
+      });
+
+    } catch (error: any) {
+      logger.error({ error: error.message, stack: error.stack }, 'DEBUG: Error occurred');
+      return reply.status(500).send({ 
+        error: error.message,
+        stack: error.stack
+      });
+    }
+  });
+
   // Endpoint simples para testar confirmação de pagamento
   fastify.post('/test/confirm-payment/:paymentId', async (request: any, reply: any) => {
     const { paymentId } = request.params;
