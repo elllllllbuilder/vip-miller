@@ -24,11 +24,11 @@ export async function webhooksRoutes(
         return reply.status(404).send({ error: 'Payment not found' });
       }
 
-      // FORÇAR processamento ignorando idempotência
+      // FORÇAR processamento usando o identifier real do payment
       const mockPayload = {
         event: 'cash_in.received',
         data: {
-          identifier: `force_${Date.now()}_${targetPayment.provider_charge_id}`, // ID único para ignorar idempotência
+          identifier: targetPayment.provider_charge_id, // usar o identifier real
           amount: targetPayment.amount / 100,
           status: 'paid',
           payment_method: 'pix',
@@ -40,6 +40,10 @@ export async function webhooksRoutes(
       };
       
       logger.info({ mockPayload }, 'FORCE: Processing payment ignoring idempotency');
+      
+      // Limpar idempotência para forçar processamento
+      const { markAsNotProcessed } = require('../../shared/utils/idempotency');
+      markAsNotProcessed(targetPayment.provider_charge_id);
       
       const result = await webhooksService.handleSyncPayWebhook(mockPayload);
       return reply.send({ 
