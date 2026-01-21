@@ -4,16 +4,21 @@ import { logger } from '../../config/logger';
 
 export async function webhooksRoutes(
   fastify: any,
-  webhooksService: WebhooksService
+  webhooksService: WebhooksService,
+  paymentsService?: any
 ) {
   // Endpoint simples para testar confirmação de pagamento
   fastify.post('/test/confirm-payment/:paymentId', async (request: any, reply: any) => {
     const { paymentId } = request.params;
     
     try {
+      if (!paymentsService) {
+        return reply.status(500).send({ error: 'PaymentsService not available' });
+      }
+
       // Buscar o payment
-      const payment = await paymentsService.listPayments(100, 0);
-      const targetPayment = payment.find(p => p.id === paymentId);
+      const payments = await paymentsService.listPayments(100, 0);
+      const targetPayment = payments.find((p: any) => p.id === paymentId);
       
       if (!targetPayment) {
         return reply.status(404).send({ error: 'Payment not found' });
@@ -37,7 +42,10 @@ export async function webhooksRoutes(
       const result = await webhooksService.handleSyncPayWebhook(mockPayload);
       return reply.send({ success: true, result, payment: targetPayment });
     } catch (error: any) {
+      logger.error({ error: error.message }, 'Test confirm payment failed');
       return reply.status(500).send({ error: error.message });
+    }
+  });
     }
   });
 

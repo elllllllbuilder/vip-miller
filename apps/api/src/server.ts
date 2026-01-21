@@ -76,7 +76,7 @@ export async function createServer() {
   // Routes
   await healthRoutes(fastify as any, prisma);
   await paymentsRoutes(fastify as any, paymentsService, usersService);
-  await webhooksRoutes(fastify as any, webhooksService);
+  await webhooksRoutes(fastify as any, webhooksService, paymentsService);
 
   // Admin routes
   fastify.get('/users', async (request, reply) => {
