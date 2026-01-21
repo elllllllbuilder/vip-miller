@@ -37,6 +37,11 @@ export class ApiClient {
     return response.data;
   }
 
+  async mockConfirmPayment(telegramUserId: string) {
+    const response = await this.client.post(`/payments/mock-confirm/${telegramUserId}`);
+    return response.data;
+  }
+
   async getSubscription(telegramUserId: string) {
     const response = await this.client.get(`/subscriptions/${telegramUserId}`);
     return response.data;
