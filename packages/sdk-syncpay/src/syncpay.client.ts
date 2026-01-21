@@ -10,13 +10,13 @@ export class SyncPayClient {
 
   async createPixCharge(request: CreateChargeRequest): Promise<CreateChargeResponse> {
     // Endpoint baseado na documentação da SyncPay
-    return this.http.post<CreateChargeResponse>('/api/partner/v1/charges', {
+    return this.http.post<CreateChargeResponse>('/api/v1/charges', {
       ...request,
       payment_method: 'pix',
     });
   }
 
   async getCharge(chargeId: string): Promise<GetChargeResponse> {
-    return this.http.get<GetChargeResponse>(`/api/partner/v1/charges/${chargeId}`);
+    return this.http.get<GetChargeResponse>(`/api/v1/charges/${chargeId}`);
   }
 }

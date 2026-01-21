@@ -7,7 +7,7 @@ export class SyncPayHttp {
   private accessToken: string | null = null;
   private tokenExpiry: Date | null = null;
 
-  constructor(clientId: string, clientSecret: string, baseUrl: string = 'https://syncpayments.com.br') {
+  constructor(clientId: string, clientSecret: string, baseUrl: string = 'https://api.syncpayments.com.br') {
     this.clientId = clientId;
     this.clientSecret = clientSecret;
     
@@ -27,7 +27,7 @@ export class SyncPayHttp {
     }
 
     // Gerar novo token
-    const response = await this.client.post('/api/partner/v1/auth-token', {
+    const response = await this.client.post('/api/v1/auth-token', {
       client_id: this.clientId,
       client_secret: this.clientSecret,
     });
