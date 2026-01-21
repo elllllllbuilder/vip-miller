@@ -25,12 +25,12 @@ export class PaymentsService {
     const charge = await this.syncPayClient.createPixCharge({
       amount: amountInReais,
       description: `Assinatura ${plan.name}`,
-      webhook_url: `${process.env.API_URL}/webhooks/syncpay`,
+      webhook_url: `https://vip-system-api.onrender.com/webhooks/syncpay`,
       client: {
-        name: 'Cliente VIP', // TODO: pegar do usuário real
-        cpf: '00000000000', // TODO: pegar do usuário real
-        email: 'cliente@vip.com', // TODO: pegar do usuário real
-        phone: '5511999999999', // TODO: pegar do usuário real
+        name: 'João Silva', // Nome válido
+        cpf: '11144477735', // CPF válido para testes
+        email: 'joao@exemplo.com', // Email válido
+        phone: '11999887766', // Telefone válido
       },
       metadata: {
         user_id: userId,
