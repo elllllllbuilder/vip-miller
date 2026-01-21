@@ -7,7 +7,31 @@ export async function webhooksRoutes(
   webhooksService: WebhooksService,
   paymentsService?: any
 ) {
-  // Endpoint para forçar processamento (ignora idempotência)
+  // Endpoint para testar ID do grupo
+  fastify.get('/test/group-id/:groupId', async (request: any, reply: any) => {
+    const { groupId } = request.params;
+    
+    try {
+      const telegramService = webhooksService.telegramService;
+      
+      // Testar se consegue acessar o grupo
+      const testResult = await telegramService.methods.getChat(groupId);
+      
+      return reply.send({
+        success: true,
+        group_id: groupId,
+        chat_info: testResult.result
+      });
+    } catch (error: any) {
+      return reply.send({
+        success: false,
+        group_id: groupId,
+        error: error.response?.data || error.message
+      });
+    }
+  });
+
+  // Endpoint para testar ID do grupo
   fastify.post('/test/force-payment/:paymentId', async (request: any, reply: any) => {
     const { paymentId } = request.params;
     
@@ -42,8 +66,13 @@ export async function webhooksRoutes(
       logger.info({ mockPayload }, 'FORCE: Processing payment ignoring idempotency');
       
       // Limpar idempotência para forçar processamento
-      const { markAsNotProcessed } = require('../../shared/utils/idempotency');
-      markAsNotProcessed(targetPayment.provider_charge_id);
+      try {
+        const { markAsNotProcessed } = require('../../shared/utils/idempotency');
+        markAsNotProcessed(targetPayment.provider_charge_id);
+        logger.info({ provider_charge_id: targetPayment.provider_charge_id }, 'FORCE: Cleared idempotency');
+      } catch (error) {
+        logger.warn('FORCE: Could not clear idempotency, continuing anyway');
+      }
       
       const result = await webhooksService.handleSyncPayWebhook(mockPayload);
       return reply.send({ 
