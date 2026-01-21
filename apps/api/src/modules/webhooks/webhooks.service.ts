@@ -13,44 +13,63 @@ export class WebhooksService {
     private prisma: PrismaClient
   ) {}
 
-  async handleSyncPayWebhook(payload: {
-    event: string;
-    charge_id: string;
-    status: string;
-    paid_at?: string;
-  }) {
-    // Idempotência
-    if (isProcessed(payload.charge_id)) {
-      logger.info({ charge_id: payload.charge_id }, 'Webhook already processed');
+  async handleSyncPayWebhook(payload: any) {
+    logger.info({ payload }, 'Processing SyncPay webhook');
+
+    // Extrair dados do webhook conforme formato da SyncPay
+    const event = payload.event;
+    const data = payload.data;
+    
+    if (!event || !data) {
+      logger.warn({ payload }, 'Invalid webhook format - missing event or data');
+      return { success: true, message: 'Invalid format - ignored' };
+    }
+
+    // Só processar eventos de pagamento confirmado
+    if (event !== 'cash_in.received' || data.status !== 'paid') {
+      logger.info({ event, status: data.status }, 'Ignoring non-paid webhook');
+      return { success: true, message: 'Ignored - not a paid event' };
+    }
+
+    const identifier = data.identifier;
+    if (!identifier) {
+      logger.error({ data }, 'Missing identifier in webhook data');
+      return { success: true, message: 'Missing identifier - ignored' };
+    }
+
+    // Idempotência - verificar se já foi processado
+    if (isProcessed(identifier)) {
+      logger.info({ identifier }, 'Webhook already processed');
       return { success: true, message: 'Already processed' };
     }
 
-    if (payload.event !== 'charge.paid' || payload.status !== 'paid') {
-      logger.info({ payload }, 'Ignoring non-paid webhook');
-      return { success: true, message: 'Ignored' };
-    }
-
-    const payment = await this.paymentsService.getPaymentByChargeId(payload.charge_id);
+    // Buscar payment pelo identifier
+    const payment = await this.paymentsService.getPaymentByChargeId(identifier);
     
     if (!payment) {
-      logger.error({ charge_id: payload.charge_id }, 'Payment not found');
-      throw new Error('Payment not found');
+      logger.error({ identifier }, 'Payment not found for identifier');
+      markAsProcessed(identifier); // Marcar como processado mesmo assim
+      return { success: true, message: 'Payment not found - marked as processed' };
     }
 
     if (payment.status === 'paid') {
       logger.info({ payment_id: payment.id }, 'Payment already marked as paid');
-      markAsProcessed(payload.charge_id);
+      markAsProcessed(identifier);
       return { success: true, message: 'Already paid' };
     }
 
+    // Extrair user_id do metadata
+    const userId = data.metadata?.user_id || payment.user_id;
+    const planId = data.metadata?.plan_id || payment.plan_id;
+
     // Criar/renovar subscription
     const subscription = await this.subscriptionsService.createOrRenewSubscription(
-      payment.user_id,
-      payment.plan_id
+      userId,
+      planId
     );
 
     // Atualizar payment
-    await this.paymentsService.confirmPayment(payload.charge_id, subscription.id);
+    await this.paymentsService.confirmPayment(identifier, subscription.id);
 
     // Criar link de convite
     const telegramUserId = parseInt(payment.user.telegram_user_id);
@@ -59,7 +78,7 @@ export class WebhooksService {
     // Salvar link no banco
     await this.prisma.inviteLink.create({
       data: {
-        user_id: payment.user_id,
+        user_id: userId,
         subscription_id: subscription.id,
         invite_link: inviteLink,
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
@@ -72,7 +91,7 @@ export class WebhooksService {
       `🎉 Pagamento confirmado!\n\nSua assinatura VIP está ativa até ${subscription.expires_at.toLocaleDateString('pt-BR')}.\n\nClique no link abaixo para entrar no grupo VIP:\n${inviteLink}\n\n⚠️ Este link expira em 24 horas e só pode ser usado uma vez.`
     );
 
-    markAsProcessed(payload.charge_id);
+    markAsProcessed(identifier);
     logger.info({ payment_id: payment.id, subscription_id: subscription.id }, 'Payment processed successfully');
 
     return { success: true, subscription_id: subscription.id };
