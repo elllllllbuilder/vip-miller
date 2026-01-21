@@ -46,8 +46,6 @@ export async function webhooksRoutes(
       return reply.status(500).send({ error: error.message });
     }
   });
-    }
-  });
 
   // Endpoint de teste para simular webhook da SyncPay
   fastify.post('/webhooks/syncpay/test/:identifier', async (request: any, reply: any) => {
