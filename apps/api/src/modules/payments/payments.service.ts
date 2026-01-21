@@ -18,32 +18,42 @@ export class PaymentsService {
   async createPixPayment(userId: string, planId: string) {
     const plan = PLANS.MONTHLY_VIP;
     
+    // Converter centavos para reais (2990 -> 29.90)
+    const amountInReais = plan.price / 100;
+    
     // Criar cobrança real no SyncPay
     const charge = await this.syncPayClient.createPixCharge({
-      amount: plan.price,
+      amount: amountInReais,
       description: `Assinatura ${plan.name}`,
+      webhook_url: `${process.env.API_URL}/webhooks/syncpay`,
+      client: {
+        name: 'Cliente VIP', // TODO: pegar do usuário real
+        cpf: '00000000000', // TODO: pegar do usuário real
+        email: 'cliente@vip.com', // TODO: pegar do usuário real
+        phone: '5511999999999', // TODO: pegar do usuário real
+      },
       metadata: {
         user_id: userId,
         plan_id: planId,
       },
     });
 
-    // Salvar payment no banco
+    // Salvar payment no banco usando o identifier da SyncPay
     const payment = await this.paymentsRepo.create({
       user_id: userId,
       plan_id: planId,
-      amount: plan.price,
+      amount: plan.price, // manter em centavos no banco
       status: 'pending',
       provider: 'syncpay',
-      provider_charge_id: charge.id,
-      pix_copy_paste: charge.pix.copy_paste,
-      pix_qr_code: charge.pix.qr_code_url,
+      provider_charge_id: charge.identifier, // usar identifier da SyncPay
+      pix_copy_paste: charge.pix_code,
+      pix_qr_code: charge.qr_code || null,
     });
 
     return {
       payment_id: payment.id,
-      pix_copy_paste: charge.pix.copy_paste,
-      pix_qr_code: charge.pix.qr_code_url,
+      pix_copy_paste: charge.pix_code,
+      pix_qr_code: charge.qr_code,
       amount: plan.price,
     };
   }
@@ -64,6 +74,22 @@ export class PaymentsService {
 
   async getPaymentByChargeId(providerChargeId: string) {
     return this.paymentsRepo.findByProviderChargeId(providerChargeId);
+  }
+
+  async checkPaymentStatus(providerChargeId: string) {
+    // Consultar status na SyncPay usando o identifier
+    const chargeStatus = await this.syncPayClient.getCharge(providerChargeId);
+    
+    // Atualizar status local se necessário
+    const payment = await this.paymentsRepo.findByProviderChargeId(providerChargeId);
+    if (payment && payment.status !== chargeStatus.status) {
+      await this.paymentsRepo.update(payment.id, {
+        status: chargeStatus.status as any,
+        paid_at: chargeStatus.paid_at ? new Date(chargeStatus.paid_at) : null,
+      });
+    }
+    
+    return chargeStatus;
   }
 
   async listPayments(limit?: number, offset?: number) {

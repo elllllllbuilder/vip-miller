@@ -64,6 +64,15 @@ export async function createServer() {
     });
   });
 
+  // Healthcheck routes para evitar 404 do Render
+  fastify.get('/', async (request, reply) => {
+    return reply.status(200).send('OK');
+  });
+
+  fastify.head('/', async (request, reply) => {
+    return reply.status(200).send();
+  });
+
   // Routes
   await healthRoutes(fastify as any, prisma);
   await paymentsRoutes(fastify as any, paymentsService, usersService);
