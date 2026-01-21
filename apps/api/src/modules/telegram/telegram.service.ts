@@ -21,19 +21,49 @@ export class TelegramService {
   }
 
   async createInviteLink(userId: number, subscriptionId: string) {
-    const expireDate = Math.floor(Date.now() / 1000) + (24 * 60 * 60); // 24 horas
-    
-    const response = await this.methods.createChatInviteLink(env.TELEGRAM_VIP_CHAT_ID, {
-      name: `Convite VIP - User ${userId}`,
-      expire_date: expireDate,
-      member_limit: 1,
-    });
+    try {
+      console.log(`🔍 DEBUG: Criando link de convite para userId: ${userId}, subscriptionId: ${subscriptionId}`);
+      console.log(`🔍 DEBUG: Grupo VIP ID: ${env.TELEGRAM_VIP_CHAT_ID}`);
+      
+      const expireDate = Math.floor(Date.now() / 1000) + (24 * 60 * 60); // 24 horas
+      
+      const response = await this.methods.createChatInviteLink(env.TELEGRAM_VIP_CHAT_ID, {
+        name: `Convite VIP - User ${userId}`,
+        expire_date: expireDate,
+        member_limit: 1,
+      });
 
-    return response.result.invite_link;
+      console.log(`✅ DEBUG: Link de convite criado:`, response.result.invite_link);
+      return response.result.invite_link;
+    } catch (error: any) {
+      console.error(`❌ DEBUG: Erro ao criar link de convite:`, error);
+      console.error(`❌ DEBUG: Error details:`, {
+        message: error.message,
+        code: error.code,
+        response: error.response?.data
+      });
+      throw error;
+    }
   }
 
   async sendMessage(chatId: number, text: string, options?: any) {
-    return this.methods.sendMessage(chatId, text, options);
+    try {
+      console.log(`🔍 DEBUG: Tentando enviar mensagem para chatId: ${chatId}`);
+      console.log(`🔍 DEBUG: Texto da mensagem: ${text.substring(0, 100)}...`);
+      
+      const result = await this.methods.sendMessage(chatId, text, options);
+      
+      console.log(`✅ DEBUG: Mensagem enviada com sucesso:`, result);
+      return result;
+    } catch (error: any) {
+      console.error(`❌ DEBUG: Erro ao enviar mensagem para ${chatId}:`, error);
+      console.error(`❌ DEBUG: Error details:`, {
+        message: error.message,
+        code: error.code,
+        response: error.response?.data
+      });
+      throw error;
+    }
   }
 
   async removeUserFromGroup(userId: number) {
