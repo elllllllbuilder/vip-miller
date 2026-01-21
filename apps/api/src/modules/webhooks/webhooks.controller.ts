@@ -36,34 +36,4 @@ export async function webhooksRoutes(
       return reply.status(500).send({ error: 'Processing failed' });
     }
   });
-
-  // Mock webhook endpoint for testing
-  fastify.post('/webhooks/syncpay/mock/:chargeId', async (request: any, reply: any) => {
-    const { chargeId } = request.params;
-    
-    if (!chargeId) {
-      return reply.status(400).send({ error: 'Missing chargeId' });
-    }
-
-    logger.info({ chargeId }, '🧪 MOCK: Simulating payment confirmation');
-
-    const payload = {
-      event: 'charge.paid',
-      charge_id: chargeId,
-      status: 'paid',
-      paid_at: new Date().toISOString(),
-    };
-    
-    try {
-      const result = await webhooksService.handleSyncPayWebhook(payload);
-      return reply.send({ 
-        ...result, 
-        mock: true, 
-        message: 'Mock payment confirmed successfully' 
-      });
-    } catch (error: any) {
-      logger.error({ error: error.message }, 'Mock webhook processing failed');
-      return reply.status(500).send({ error: 'Processing failed' });
-    }
-  });
 }

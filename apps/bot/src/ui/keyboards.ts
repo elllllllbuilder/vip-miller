@@ -5,13 +5,7 @@ export function getSubscribeKeyboard() {
     .text('💳 Assinar VIP - R$ 29,90/mês', 'subscribe:monthly_vip');
 }
 
-export function getPaymentKeyboard(mockMode: boolean = false) {
-  const keyboard = new InlineKeyboard()
+export function getPaymentKeyboard() {
+  return new InlineKeyboard()
     .text('✅ Já paguei', 'payment:check');
-  
-  if (mockMode) {
-    keyboard.row().text('🧪 Confirmar Pagamento (MOCK)', 'payment:mock_confirm');
-  }
-  
-  return keyboard;
 }

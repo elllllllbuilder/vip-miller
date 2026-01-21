@@ -6,7 +6,6 @@ import { NotFoundError } from '../../shared/http/errors';
 
 export class PaymentsService {
   private syncPayClient: SyncPayClient;
-  private mockMode: boolean;
 
   constructor(private paymentsRepo: PaymentsRepository) {
     this.syncPayClient = new SyncPayClient(
@@ -14,46 +13,20 @@ export class PaymentsService {
       env.SYNCPAY_CLIENT_SECRET, 
       env.SYNCPAY_API_URL
     );
-    this.mockMode = process.env.SYNCPAY_MOCK_MODE === 'true';
   }
 
   async createPixPayment(userId: string, planId: string) {
     const plan = PLANS.MONTHLY_VIP;
     
-    let charge;
-    
-    if (this.mockMode) {
-      // Modo mock para testes
-      console.log('🧪 MOCK MODE: Gerando pagamento fake');
-      charge = {
-        id: `mock_charge_${Date.now()}`,
-        status: 'pending' as const,
-        amount: plan.price,
-        description: `Assinatura ${plan.name}`,
-        payment_method: 'pix' as const,
-        pix: {
-          qr_code: 'mock_qr_code_base64',
-          qr_code_url: 'https://example.com/qr.png',
-          copy_paste: '00020126580014br.gov.bcb.pix0136mock-pix-code-for-testing',
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        },
-        created_at: new Date().toISOString(),
-        metadata: {
-          user_id: userId,
-          plan_id: planId,
-        },
-      };
-    } else {
-      // Criar cobrança real no SyncPay
-      charge = await this.syncPayClient.createPixCharge({
-        amount: plan.price,
-        description: `Assinatura ${plan.name}`,
-        metadata: {
-          user_id: userId,
-          plan_id: planId,
-        },
-      });
-    }
+    // Criar cobrança real no SyncPay
+    const charge = await this.syncPayClient.createPixCharge({
+      amount: plan.price,
+      description: `Assinatura ${plan.name}`,
+      metadata: {
+        user_id: userId,
+        plan_id: planId,
+      },
+    });
 
     // Salvar payment no banco
     const payment = await this.paymentsRepo.create({
