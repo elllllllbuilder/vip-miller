@@ -41,9 +41,9 @@ Após pagar, você receberá automaticamente o link de acesso ao grupo VIP!`,
   });
 
   bot.callbackQuery('payment:check', async (ctx: Context) => {
-    await ctx.answerCallbackQuery(
-      'Aguarde a confirmação do pagamento. Você receberá o link automaticamente!',
-      { show_alert: true }
-    );
+    await ctx.answerCallbackQuery({
+      text: 'Aguarde a confirmação do pagamento. Você receberá o link automaticamente!',
+      show_alert: true
+    });
   });
 }
