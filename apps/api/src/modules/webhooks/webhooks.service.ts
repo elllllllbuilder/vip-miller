@@ -16,22 +16,37 @@ export class WebhooksService {
   async handleSyncPayWebhook(payload: any) {
     logger.info({ payload }, 'Processing SyncPay webhook');
 
-    // Extrair dados do webhook conforme formato da SyncPay
-    const event = payload.event;
-    const data = payload.data;
+    // Suportar tanto o formato antigo quanto o novo da SyncPay
+    let event, data;
     
-    if (!event || !data) {
+    if (payload.event && payload.data) {
+      // Formato esperado: {event: "...", data: {...}}
+      event = payload.event;
+      data = payload.data;
+    } else if (payload.data && payload.data.id) {
+      // Formato real da SyncPay: {data: {...}}
+      event = 'cash_in.received'; // assumir evento padrão
+      data = payload.data;
+    } else {
       logger.warn({ payload }, 'Invalid webhook format - missing event or data');
       return { success: true, message: 'Invalid format - ignored' };
     }
 
     // Só processar eventos de pagamento confirmado
-    if (event !== 'cash_in.received' || data.status !== 'paid') {
+    // SyncPay pode enviar status "paid" ou "PAID" ou outros formatos
+    const isPaid = data.status && (
+      data.status.toLowerCase() === 'paid' || 
+      data.status.toLowerCase() === 'approved' ||
+      data.status === 'PAID' ||
+      data.status === 'APPROVED'
+    );
+
+    if (event !== 'cash_in.received' || !isPaid) {
       logger.info({ event, status: data.status }, 'Ignoring non-paid webhook');
       return { success: true, message: 'Ignored - not a paid event' };
     }
 
-    const identifier = data.identifier;
+    const identifier = data.identifier || data.id;
     if (!identifier) {
       logger.error({ data }, 'Missing identifier in webhook data');
       return { success: true, message: 'Missing identifier - ignored' };
