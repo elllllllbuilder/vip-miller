@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"pnpm --filter api dev\" \"pnpm --filter bot dev\" \"pnpm --filter worker dev\"",
+    "dev": "concurrently \"pnpm --filter bot dev\" \"pnpm --filter worker dev\"",
+    "dev:all": "concurrently \"pnpm --filter api dev\" \"pnpm --filter bot dev\" \"pnpm --filter worker dev\"",
     "build": "pnpm -r build",
     "migrate": "pnpm --filter api migrate",
     "migrate:dev": "pnpm --filter api migrate:dev"

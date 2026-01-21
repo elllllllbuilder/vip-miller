@@ -9,7 +9,11 @@ export class PaymentsService {
   private mockMode: boolean;
 
   constructor(private paymentsRepo: PaymentsRepository) {
-    this.syncPayClient = new SyncPayClient(env.SYNCPAY_API_KEY, env.SYNCPAY_API_URL);
+    this.syncPayClient = new SyncPayClient(
+      env.SYNCPAY_CLIENT_ID, 
+      env.SYNCPAY_CLIENT_SECRET, 
+      env.SYNCPAY_API_URL
+    );
     this.mockMode = process.env.SYNCPAY_MOCK_MODE === 'true';
   }
 

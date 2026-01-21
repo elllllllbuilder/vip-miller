@@ -19,9 +19,9 @@ export const env = {
   TELEGRAM_VIP_CHAT_ID: process.env.TELEGRAM_VIP_CHAT_ID || '',
   TELEGRAM_API_URL: process.env.TELEGRAM_API_URL || 'https://api.telegram.org',
   
-  SYNCPAY_API_KEY: process.env.SYNCPAY_API_KEY || '',
-  SYNCPAY_WEBHOOK_SECRET: process.env.SYNCPAY_WEBHOOK_SECRET || '',
-  SYNCPAY_API_URL: process.env.SYNCPAY_API_URL || 'https://api.syncpay.com.br',
+  SYNCPAY_CLIENT_ID: process.env.SYNCPAY_CLIENT_ID || '',
+  SYNCPAY_CLIENT_SECRET: process.env.SYNCPAY_CLIENT_SECRET || '',
+  SYNCPAY_API_URL: process.env.SYNCPAY_API_URL || 'https://syncpayments.com.br',
   
   PLAN_MONTHLY_ID: process.env.PLAN_MONTHLY_ID || 'monthly_vip',
   PLAN_MONTHLY_PRICE: parseInt(process.env.PLAN_MONTHLY_PRICE || '2990', 10),
