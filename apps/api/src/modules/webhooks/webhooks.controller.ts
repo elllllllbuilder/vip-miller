@@ -7,10 +7,10 @@ import { SyncPayWebhookSchema } from '@vip-system/shared/src/types/api';
 import { logger } from '../../config/logger';
 
 export async function webhooksRoutes(
-  fastify: FastifyInstance,
+  fastify: any,
   webhooksService: WebhooksService
 ) {
-  fastify.post('/webhooks/syncpay', async (request: FastifyRequest, reply) => {
+  fastify.post('/webhooks/syncpay', async (request: any, reply: any) => {
     const signature = request.headers['x-syncpay-signature'] as string;
     
     if (!signature) {

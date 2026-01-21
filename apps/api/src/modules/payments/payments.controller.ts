@@ -5,7 +5,7 @@ import { validateSchema } from '../../shared/http/validation';
 import { CreatePixPaymentSchema } from '@vip-system/shared/src/types/api';
 
 export async function paymentsRoutes(
-  fastify: FastifyInstance,
+  fastify: any,
   paymentsService: PaymentsService,
   usersService: UsersService
 ) {

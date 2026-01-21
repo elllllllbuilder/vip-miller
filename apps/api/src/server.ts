@@ -23,7 +23,11 @@ import { paymentsRoutes } from './modules/payments/payments.controller';
 import { webhooksRoutes } from './modules/webhooks/webhooks.controller';
 
 export async function createServer() {
-  const fastify = Fastify({ logger });
+  const fastify = Fastify({ 
+    logger: {
+      level: env.NODE_ENV === 'production' ? 'info' : 'debug'
+    }
+  });
   const prisma = new PrismaClient();
 
   // Repositories
@@ -61,9 +65,9 @@ export async function createServer() {
   });
 
   // Routes
-  await healthRoutes(fastify, prisma);
-  await paymentsRoutes(fastify, paymentsService, usersService);
-  await webhooksRoutes(fastify, webhooksService);
+  await healthRoutes(fastify as any, prisma);
+  await paymentsRoutes(fastify as any, paymentsService, usersService);
+  await webhooksRoutes(fastify as any, webhooksService);
 
   // Admin routes
   fastify.get('/users', async (request, reply) => {
