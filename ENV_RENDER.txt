@@ -1,28 +1,13 @@
-# ===========================================
-# VARIÁVEIS DE AMBIENTE PARA PRODUÇÃO
-# ===========================================
-
-# Database (PostgreSQL no Render)
 DATABASE_URL=postgresql://user:password@host:port/database
-
-# Redis (Upstash ou Redis Cloud)
 REDIS_URL=redis://default:password@host:port
-
-# API Configuration
 NODE_ENV=production
 API_PORT=10000
-API_URL=https://seu-app.onrender.com
-
-# Telegram Bot
+API_URL=https://seu-app-name.onrender.com
 TELEGRAM_BOT_TOKEN=8567672373:AAHnR234cwYg9qcpkDHXoKeP1TZj80N1AXM
 TELEGRAM_VIP_CHAT_ID=-5158395680
 TELEGRAM_API_URL=https://api.telegram.org
-
-# SyncPay
 SYNCPAY_API_KEY=f8c56a5d-e365-42d2-aca3-394d2b8348b3
 SYNCPAY_WEBHOOK_SECRET=05466549-1474-46e9-92c0-36aa929f28a9
 SYNCPAY_API_URL=https://api.syncpayments.com.br/
-
-# Plans
 PLAN_MONTHLY_ID=monthly_vip
 PLAN_MONTHLY_PRICE=2990
