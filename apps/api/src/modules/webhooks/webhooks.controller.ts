@@ -6,6 +6,41 @@ export async function webhooksRoutes(
   fastify: any,
   webhooksService: WebhooksService
 ) {
+  // Endpoint simples para testar confirmação de pagamento
+  fastify.post('/test/confirm-payment/:paymentId', async (request: any, reply: any) => {
+    const { paymentId } = request.params;
+    
+    try {
+      // Buscar o payment
+      const payment = await paymentsService.listPayments(100, 0);
+      const targetPayment = payment.find(p => p.id === paymentId);
+      
+      if (!targetPayment) {
+        return reply.status(404).send({ error: 'Payment not found' });
+      }
+
+      // Simular webhook
+      const mockPayload = {
+        event: 'cash_in.received',
+        data: {
+          identifier: targetPayment.provider_charge_id,
+          amount: targetPayment.amount / 100,
+          status: 'paid',
+          payment_method: 'pix',
+          metadata: {
+            user_id: targetPayment.user_id,
+            plan_id: targetPayment.plan_id
+          }
+        }
+      };
+      
+      const result = await webhooksService.handleSyncPayWebhook(mockPayload);
+      return reply.send({ success: true, result, payment: targetPayment });
+    } catch (error: any) {
+      return reply.status(500).send({ error: error.message });
+    }
+  });
+
   // Endpoint de teste para simular webhook da SyncPay
   fastify.post('/webhooks/syncpay/test/:identifier', async (request: any, reply: any) => {
     const { identifier } = request.params;
