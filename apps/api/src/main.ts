@@ -6,17 +6,17 @@ async function start() {
   try {
     const { fastify } = await createServer();
     
-    // Render usa a variável PORT automaticamente
-    const port = process.env.PORT || env.API_PORT;
+    // Render OBRIGATORIAMENTE usa process.env.PORT
+    const port = process.env.PORT || 3000;
     
     await fastify.listen({
       port: Number(port),
-      host: '0.0.0.0',
+      host: '0.0.0.0', // OBRIGATÓRIO no Render
     });
 
-    logger.info(`API running on port ${port}`);
+    console.log(`🚀 API running on port ${port}`);
   } catch (error) {
-    logger.error(error);
+    console.error('❌ Failed to start server:', error);
     process.exit(1);
   }
 }
