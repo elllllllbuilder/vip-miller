@@ -72,8 +72,18 @@ export class WebhooksService {
     await this.paymentsService.confirmPayment(identifier, subscription.id);
 
     // Criar link de convite
+    logger.info({ payment }, 'DEBUG: Payment object before telegram operations');
+    
+    if (!payment.user) {
+      logger.error({ payment_id: payment.id }, 'Payment user not loaded');
+      throw new Error('Payment user not found');
+    }
+    
     const telegramUserId = parseInt(payment.user.telegram_user_id);
+    logger.info({ telegramUserId, telegram_user_id: payment.user.telegram_user_id }, 'DEBUG: Telegram user ID');
+    
     const inviteLink = await this.telegramService.createInviteLink(telegramUserId, subscription.id);
+    logger.info({ inviteLink }, 'DEBUG: Invite link created');
 
     // Salvar link no banco
     await this.prisma.inviteLink.create({
@@ -86,10 +96,12 @@ export class WebhooksService {
     });
 
     // Enviar link ao usuário
-    await this.telegramService.sendMessage(
+    logger.info({ telegramUserId }, 'DEBUG: Sending message to user');
+    const messageResult = await this.telegramService.sendMessage(
       telegramUserId,
       `🎉 Pagamento confirmado!\n\nSua assinatura VIP está ativa até ${subscription.expires_at.toLocaleDateString('pt-BR')}.\n\nClique no link abaixo para entrar no grupo VIP:\n${inviteLink}\n\n⚠️ Este link expira em 24 horas e só pode ser usado uma vez.`
     );
+    logger.info({ messageResult }, 'DEBUG: Message sent result');
 
     markAsProcessed(identifier);
     logger.info({ payment_id: payment.id, subscription_id: subscription.id }, 'Payment processed successfully');
