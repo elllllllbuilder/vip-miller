@@ -25,7 +25,7 @@ import { webhooksRoutes } from './modules/webhooks/webhooks.controller';
 export async function createServer() {
   const fastify = Fastify({ 
     logger: {
-      level: env.NODE_ENV === 'production' ? 'info' : 'debug'
+      level: process.env.NODE_ENV === 'production' ? 'info' : 'debug'
     }
   });
   const prisma = new PrismaClient();
