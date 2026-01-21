@@ -7,6 +7,56 @@ export async function webhooksRoutes(
   webhooksService: WebhooksService,
   paymentsService?: any
 ) {
+  // Endpoint para forçar processamento (ignora idempotência)
+  fastify.post('/test/force-payment/:paymentId', async (request: any, reply: any) => {
+    const { paymentId } = request.params;
+    
+    try {
+      if (!paymentsService) {
+        return reply.status(500).send({ error: 'PaymentsService not available' });
+      }
+
+      // Buscar o payment
+      const payments = await paymentsService.listPayments(100, 0);
+      const targetPayment = payments.find((p: any) => p.id === paymentId);
+      
+      if (!targetPayment) {
+        return reply.status(404).send({ error: 'Payment not found' });
+      }
+
+      // FORÇAR processamento ignorando idempotência
+      const mockPayload = {
+        event: 'cash_in.received',
+        data: {
+          identifier: `force_${Date.now()}_${targetPayment.provider_charge_id}`, // ID único para ignorar idempotência
+          amount: targetPayment.amount / 100,
+          status: 'paid',
+          payment_method: 'pix',
+          metadata: {
+            user_id: targetPayment.user_id,
+            plan_id: targetPayment.plan_id
+          }
+        }
+      };
+      
+      logger.info({ mockPayload }, 'FORCE: Processing payment ignoring idempotency');
+      
+      const result = await webhooksService.handleSyncPayWebhook(mockPayload);
+      return reply.send({ 
+        success: true, 
+        message: 'Force processed', 
+        result, 
+        payment: targetPayment 
+      });
+    } catch (error: any) {
+      logger.error({ error: error.message, stack: error.stack }, 'FORCE: Error occurred');
+      return reply.status(500).send({ 
+        error: error.message,
+        stack: error.stack
+      });
+    }
+  });
+
   // Endpoint de debug para testar sem Telegram
   fastify.post('/test/debug-payment/:paymentId', async (request: any, reply: any) => {
     const { paymentId } = request.params;
