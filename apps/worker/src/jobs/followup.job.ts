@@ -1,6 +1,9 @@
 import { Job } from 'bullmq';
-import { apiClient } from '../clients/api.client';
-import { telegramClient } from '../clients/telegram.client';
+import { ApiClient } from '../clients/api.client';
+import { TelegramClient } from '../clients/telegram.client';
+
+const apiClient = new ApiClient();
+const telegramClient = new TelegramClient();
 
 interface FollowUpUser {
   telegram_user_id: string;

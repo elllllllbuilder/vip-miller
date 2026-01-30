@@ -22,4 +22,14 @@ export class ApiClient {
     const response = await this.client.post(`/subscriptions/${subscriptionId}/expire`);
     return response.data;
   }
+
+  async get<T>(path: string): Promise<T> {
+    const response = await this.client.get(path);
+    return response.data;
+  }
+
+  async post<T>(path: string, data?: any): Promise<T> {
+    const response = await this.client.post(path, data);
+    return response.data;
+  }
 }

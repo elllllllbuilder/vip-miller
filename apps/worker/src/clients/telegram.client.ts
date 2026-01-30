@@ -8,7 +8,7 @@ export class TelegramClient {
     this.baseUrl = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}`;
   }
 
-  async sendMessage(chatId: number, text: string, options?: any) {
+  async sendMessage(chatId: number | string, text: string, options?: any) {
     const response = await axios.post(`${this.baseUrl}/sendMessage`, {
       chat_id: chatId,
       text,
