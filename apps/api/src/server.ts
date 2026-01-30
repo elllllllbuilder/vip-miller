@@ -22,6 +22,7 @@ import { healthRoutes } from './modules/health/health.controller';
 import { paymentsRoutes } from './modules/payments/payments.controller';
 import { webhooksRoutes } from './modules/webhooks/webhooks.controller';
 import { followUpRoutes } from './modules/followup/followup.controller';
+import { broadcastRoutes } from './modules/broadcast/broadcast.controller';
 
 export async function createServer() {
   const fastify = Fastify({ 
@@ -79,6 +80,7 @@ export async function createServer() {
   await paymentsRoutes(fastify as any, paymentsService, usersService);
   await webhooksRoutes(fastify as any, webhooksService, paymentsService);
   await followUpRoutes(fastify as any);
+  await broadcastRoutes(fastify as any);
 
   // Admin routes
   fastify.get('/users', async (request, reply) => {
