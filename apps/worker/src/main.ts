@@ -1,12 +1,13 @@
 import { renewalQueue, createRenewalWorker } from './queues/queues';
 import { processRenewalJob } from './jobs/renewals.job';
 import { processExpirationsJob } from './jobs/expirations.job';
+import { Job } from 'bullmq';
 
 async function start() {
   console.log('🔧 Worker starting...');
 
   // Criar worker para processar jobs
-  const worker = createRenewalWorker(async (job) => {
+  const worker = createRenewalWorker(async (job: Job) => {
     if (job.name === 'renewal-reminder') {
       return processRenewalJob(job);
     } else if (job.name === 'process-expirations') {
@@ -14,11 +15,11 @@ async function start() {
     }
   });
 
-  worker.on('completed', (job) => {
+  worker.on('completed', (job: Job) => {
     console.log(`✅ Job ${job.id} completed`);
   });
 
-  worker.on('failed', (job, err) => {
+  worker.on('failed', (job: Job | undefined, err: Error) => {
     console.error(`❌ Job ${job?.id} failed:`, err);
   });
 

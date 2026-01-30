@@ -41,4 +41,14 @@ export class ApiClient {
     const response = await this.client.get(`/subscriptions/${telegramUserId}`);
     return response.data;
   }
+
+  async markOfferShown(telegramUserId: string) {
+    try {
+      await this.client.post('/followup/mark-offer-shown', {
+        telegram_user_id: telegramUserId,
+      });
+    } catch (error) {
+      console.error('Error marking offer shown:', error);
+    }
+  }
 }

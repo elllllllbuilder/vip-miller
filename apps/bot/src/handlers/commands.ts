@@ -34,8 +34,12 @@ export function registerCommands(bot: Bot, telegramClient: TelegramClient, apiCl
       sequence = VIP_SEQUENCE;
     } else if (!hasSeenStart) {
       sequence = SALES_SEQUENCE_FIRST_START;
+      // Registrar que o usuário viu a oferta (para follow-up)
+      await apiClient.markOfferShown(userId.toString());
     } else {
       sequence = SALES_SEQUENCE_RETURNING;
+      // Registrar que o usuário viu a oferta novamente
+      await apiClient.markOfferShown(userId.toString());
     }
 
     // Enviar sequência de mensagens

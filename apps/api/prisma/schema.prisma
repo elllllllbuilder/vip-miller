@@ -70,14 +70,17 @@ model Payment {
 }
 
 model UserState {
-  id                  String   @id @default(uuid())
-  user_id             String   @unique
-  start_seen          Boolean  @default(false)
-  current_funnel      String?
-  current_step        Int      @default(0)
-  last_interaction_at DateTime @default(now())
-  created_at          DateTime @default(now())
-  updated_at          DateTime @updatedAt
+  id                    String    @id @default(uuid())
+  user_id               String    @unique
+  start_seen            Boolean   @default(false)
+  current_funnel        String?
+  current_step          Int       @default(0)
+  last_interaction_at   DateTime  @default(now())
+  last_offer_shown_at   DateTime?
+  followup_count        Int       @default(0)
+  last_followup_sent_at DateTime?
+  created_at            DateTime  @default(now())
+  updated_at            DateTime  @updatedAt
   
   user User @relation(fields: [user_id], references: [id])
 
