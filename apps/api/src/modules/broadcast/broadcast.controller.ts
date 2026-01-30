@@ -73,12 +73,54 @@ export async function broadcastRoutes(app: FastifyInstance) {
         return reply.status(400).send({ error: 'Invalid target' });
     }
 
+    // Enviar mensagens via Telegram
+    const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+    const baseUrl = `https://api.telegram.org/bot${telegramToken}`;
+    
+    let sentCount = 0;
+    let failedCount = 0;
+
+    for (const user of users) {
+      try {
+        const payload: any = {
+          chat_id: user.telegram_user_id,
+          text: message,
+        };
+
+        if (button) {
+          payload.reply_markup = {
+            inline_keyboard: [[
+              { text: button.text, callback_data: button.callback_data }
+            ]]
+          };
+        }
+
+        const response = await fetch(`${baseUrl}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+          sentCount++;
+        } else {
+          failedCount++;
+        }
+
+        // Delay de 100ms entre mensagens para evitar rate limit
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`Failed to send to user ${user.telegram_user_id}:`, error);
+        failedCount++;
+      }
+    }
+
     return reply.send({
       success: true,
-      message: 'Broadcast queued',
+      message: 'Broadcast sent',
       total_users: users.length,
-      users: users.map(u => u.telegram_user_id),
-      button,
+      sent: sentCount,
+      failed: failedCount,
     });
   });
 }
