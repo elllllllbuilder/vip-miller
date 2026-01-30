@@ -3,6 +3,7 @@ import { ApiClient } from '../clients/api.client';
 import { getPaymentKeyboard } from '../ui/keyboards';
 
 export function registerCallbacks(bot: Bot, apiClient: ApiClient) {
+  // Handler para subscribe:planId (formato antigo)
   bot.callbackQuery(/^subscribe:(.+)$/, async (ctx: Context) => {
     if (!ctx.from || !ctx.callbackQuery) return;
 
@@ -15,6 +16,41 @@ export function registerCallbacks(bot: Bot, apiClient: ApiClient) {
       const payment = await apiClient.createPixPayment(
         ctx.from.id.toString(),
         planId
+      );
+
+      await ctx.reply(
+        `💳 Pagamento gerado!
+
+Valor: R$ ${(payment.amount / 100).toFixed(2)}
+
+📋 Copie o código Pix abaixo:
+
+\`${payment.pix_copy_paste}\`
+
+Após pagar, você receberá automaticamente o link de acesso ao grupo VIP!`,
+        {
+          parse_mode: 'Markdown',
+          reply_markup: getPaymentKeyboard(),
+        }
+      );
+    } catch (error: any) {
+      console.error('Error creating payment:', error);
+      await ctx.reply(
+        '❌ Erro ao gerar pagamento. Tente novamente em alguns instantes.'
+      );
+    }
+  });
+
+  // Handler para subscribe_monthly (formato dos follow-ups)
+  bot.callbackQuery('subscribe_monthly', async (ctx: Context) => {
+    if (!ctx.from || !ctx.callbackQuery) return;
+
+    await ctx.answerCallbackQuery('Gerando pagamento...');
+
+    try {
+      const payment = await apiClient.createPixPayment(
+        ctx.from.id.toString(),
+        'monthly_vip'
       );
 
       await ctx.reply(
