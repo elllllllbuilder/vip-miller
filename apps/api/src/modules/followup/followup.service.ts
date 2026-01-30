@@ -12,7 +12,7 @@ export class FollowUpService {
           not: null,
         },
         followup_count: {
-          lt: 3, // Máximo de 3 follow-ups
+          lt: 6, // Máximo de 6 follow-ups
         },
         user: {
           subscriptions: {

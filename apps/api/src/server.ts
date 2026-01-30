@@ -21,6 +21,7 @@ import { FunnelsService } from './modules/funnels/funnels.service';
 import { healthRoutes } from './modules/health/health.controller';
 import { paymentsRoutes } from './modules/payments/payments.controller';
 import { webhooksRoutes } from './modules/webhooks/webhooks.controller';
+import { followUpRoutes } from './modules/followup/followup.controller';
 
 export async function createServer() {
   const fastify = Fastify({ 
@@ -77,6 +78,7 @@ export async function createServer() {
   await healthRoutes(fastify as any, prisma);
   await paymentsRoutes(fastify as any, paymentsService, usersService);
   await webhooksRoutes(fastify as any, webhooksService, paymentsService);
+  await followUpRoutes(fastify as any);
 
   // Admin routes
   fastify.get('/users', async (request, reply) => {

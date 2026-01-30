@@ -17,11 +17,14 @@ interface AbandonedPayment {
   created_at: string;
 }
 
-// Configuração dos follow-ups (em horas)
+// Configuração dos follow-ups (em minutos para testes rápidos)
 const FOLLOWUP_SCHEDULE = [
-  { hours: 24, message: 1 },   // 1 dia depois
-  { hours: 72, message: 2 },   // 3 dias depois
-  { hours: 168, message: 3 },  // 7 dias depois
+  { minutes: 2, message: 1 },    // 2 minutos depois
+  { minutes: 10, message: 2 },   // 10 minutos depois
+  { minutes: 30, message: 3 },   // 30 minutos depois
+  { minutes: 1440, message: 4 }, // 24 horas (1440 min)
+  { minutes: 2880, message: 5 }, // 48 horas (2880 min)
+  { minutes: 4320, message: 6 }, // 72 horas (4320 min)
 ];
 
 export async function processFollowUps(job: Job) {
@@ -40,7 +43,9 @@ export async function processFollowUps(job: Job) {
         continue;
       }
 
-      if (hoursSinceOffer >= nextFollowUp.hours) {
+      const minutesSinceOffer = getMinutesSince(user.last_offer_shown_at);
+      
+      if (minutesSinceOffer >= nextFollowUp.minutes) {
         // Hora de enviar o próximo follow-up
         await sendFollowUpMessage(user.telegram_user_id, nextFollowUp.message);
         
@@ -81,32 +86,53 @@ async function sendFollowUpMessage(telegramUserId: string, messageNumber: number
 
 🤔 Ficou com alguma dúvida? Estou aqui para ajudar!
 
-O grupo VIP está crescendo rápido e o conteúdo exclusivo está cada vez melhor.
-
 💎 Que tal garantir seu acesso agora?`,
     },
     {
-      text: `🔥 Última chance de aproveitar!
+      text: `🔥 Não perca essa oportunidade!
+
+O grupo VIP está crescendo rápido e o conteúdo exclusivo está cada vez melhor.
+
+Por apenas R$ 29,90/mês você tem acesso a tudo!
+
+⏰ Garanta agora!`,
+    },
+    {
+      text: `💰 Última chance de aproveitar!
 
 Mais de 500 pessoas já estão no VIP aproveitando:
 • Conteúdo exclusivo diário
 • Comunidade engajada
 • Suporte direto
 
-Por apenas R$ 29,90/mês você não fica de fora!
-
-⏰ Não deixe para depois, garanta agora!`,
+🚀 Não deixe para depois!`,
     },
     {
-      text: `💰 OFERTA ESPECIAL!
+      text: `⏰ Já se passou 24 horas...
 
-Vi que você ainda não entrou no VIP...
+Vi que você ainda não entrou no VIP.
 
-Que tal uma última chance? 
+O que está te impedindo? Posso ajudar com alguma dúvida?
 
-Clique abaixo e garanta seu acesso ao melhor conteúdo exclusivo!
+💎 Clique abaixo e garanta seu acesso!`,
+    },
+    {
+      text: `🔔 Lembrete importante!
 
-🚀 Não perca mais tempo!`,
+Faz 2 dias que você viu nossa oferta...
+
+Não perca mais tempo! O conteúdo exclusivo está esperando por você.
+
+✨ Assine agora por apenas R$ 29,90/mês!`,
+    },
+    {
+      text: `🚨 ÚLTIMA OPORTUNIDADE!
+
+Já faz 3 dias... Essa é sua última chance!
+
+Centenas de pessoas já estão aproveitando o VIP.
+
+Não fique de fora! 🎯`,
     },
   ];
 
@@ -137,6 +163,13 @@ Clique no botão abaixo:`;
       ]]
     }
   });
+}
+
+function getMinutesSince(dateString: string): number {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  return diffMs / (1000 * 60);
 }
 
 function getHoursSince(dateString: string): number {

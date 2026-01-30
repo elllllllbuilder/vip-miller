@@ -1,6 +1,7 @@
 import { renewalQueue, createRenewalWorker } from './queues/queues';
 import { processRenewalJob } from './jobs/renewals.job';
 import { processExpirationsJob } from './jobs/expirations.job';
+import { processFollowUps } from './jobs/followup.job';
 import { Job } from 'bullmq';
 
 async function start() {
@@ -12,6 +13,8 @@ async function start() {
       return processRenewalJob(job);
     } else if (job.name === 'process-expirations') {
       return processExpirationsJob(job);
+    } else if (job.name === 'process-followups') {
+      return processFollowUps(job);
     }
   });
 
@@ -64,9 +67,21 @@ async function start() {
     }
   );
 
+  // Job de follow-up (roda a cada 5 minutos para testes rápidos)
+  await renewalQueue.add(
+    'process-followups',
+    {},
+    {
+      repeat: {
+        pattern: '*/5 * * * *', // A cada 5 minutos
+      },
+    }
+  );
+
   console.log('✅ Worker is running and jobs are scheduled!');
   console.log('📅 Renewal reminders: Daily at 10:00 AM (D-7, D-3, D-1)');
   console.log('📅 Process expirations: Daily at 11:00 AM');
+  console.log('📅 Follow-ups: Every 5 minutes');
 }
 
 start().catch((error) => {
