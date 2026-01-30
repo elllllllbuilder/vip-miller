@@ -40,7 +40,7 @@ export function registerCommands(bot: Bot, telegramClient: TelegramClient, apiCl
 
     // Enviar sequência de mensagens
     for (const message of sequence) {
-      const keyboard = message.keyboard === 'subscribe' ? getSubscribeKeyboard() : undefined;
+      const keyboard = (message as any).keyboard === 'subscribe' ? getSubscribeKeyboard() : undefined;
       
       await ctx.reply(message.text, {
         reply_markup: keyboard,

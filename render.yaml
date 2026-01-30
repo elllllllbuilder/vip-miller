@@ -20,15 +20,17 @@ services:
       - key: TELEGRAM_BOT_TOKEN
         value: 8567672373:AAHnR234cwYg9qcpkDHXoKeP1TZj80N1AXM
       - key: TELEGRAM_VIP_CHAT_ID
-        value: -5158395680
+        value: -1003420366019
       - key: TELEGRAM_API_URL
         value: https://api.telegram.org
-      - key: SYNCPAY_API_KEY
+      - key: SYNCPAY_CLIENT_ID
         value: f8c56a5d-e365-42d2-aca3-394d2b8348b3
-      - key: SYNCPAY_WEBHOOK_SECRET
+      - key: SYNCPAY_CLIENT_SECRET
         value: 05466549-1474-46e9-92c0-36aa929f28a9
       - key: SYNCPAY_API_URL
-        value: https://api.syncpayments.com.br/
+        value: https://api.syncpayments.com.br
+      - key: SYNCPAY_MOCK_MODE
+        value: false
       - key: PLAN_MONTHLY_ID
         value: monthly_vip
       - key: PLAN_MONTHLY_PRICE
@@ -47,7 +49,9 @@ services:
       - key: TELEGRAM_BOT_TOKEN
         value: 8567672373:AAHnR234cwYg9qcpkDHXoKeP1TZj80N1AXM
       - key: TELEGRAM_VIP_CHAT_ID
-        value: -5158395680
+        value: -1003420366019
+      - key: TELEGRAM_API_URL
+        value: https://api.telegram.org
       - key: API_URL
         value: https://vip-miller-api.onrender.com
       - key: NODE_ENV
